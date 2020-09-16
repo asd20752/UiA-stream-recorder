@@ -2,7 +2,9 @@ import requests
 import m3u8
 import time
 import os
-subjects = ["ing101", "mas134", "ma178", "fys129"]
+import json
+import psutil
+subjects = ["ing101", "mas134", "ma178", "fys129", "ar"]
 url_origin = "https://live.uia.no/live/"
 url_playlist = "/playlist.m3u8?DVR"
 
@@ -43,10 +45,46 @@ def get_m3u8(uri, subject):
     return m.data
 
 
+def getPidFile():
+    if os.path.exists("pid.json"):
+        with open("pid.json") as json_data_file:
+            return json.load(json_data_file)
+    else:
+        return {}
+
+
+def purgePidFile():
+    pidFile = getPidFile()
+    pidOut = {}
+    for pidObj in pidFile:
+        if psutil.pid_exists(int(pidObj)):
+            pidOut[pidObj] = pidFile[pidObj]
+
+    with open("pid.json", "w") as pidFileOut:
+        json.dump(pidOut, pidFileOut)
+
+
+def isRecording(subject):
+    pidFile = getPidFile()
+    for pid in pidFile:
+        if (pidFile[pid] == subject):
+            return True
+
+        else:
+            return False
+
+
+purgePidFile()
+
 for subject in subjects:
     playlist = get_m3u8(url_playlist, subject)
     if playlist:
         print(subject + " is online")
-        os.system("python main.py " + subject)
+        if(isRecording(subject)):
+            print(subject + " is already beeing recorded")
+        else:
+            print("Starting recording in %s", subject)
+            os.system("python main.py " + subject)
+
     else:
         print(subject + " is offline")
