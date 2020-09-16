@@ -1,12 +1,14 @@
 import requests
-import psutil
 import m3u8
 import time
 from datetime import datetime
 import sys
 import os
 import json
-
+import platform
+import errno
+if(platform.system() == "Windows"):
+    import psutil
 
 emne = sys.argv[1]
 print(emne)
@@ -62,6 +64,35 @@ def checkOutputFolder(folder):
         os.makedirs(folder)
 
 
+def processRunning(pid):
+    if(platform.system() == "Linux"):
+        if pid < 0:
+            return False
+        if pid == 0:
+            # According to "man 2 kill" PID 0 refers to every process
+            # in the process group of the calling process.
+            # On certain systems 0 is a valid PID but we have no way
+            # to know that in a portable fashion.
+            raise ValueError('invalid PID 0')
+        try:
+            os.kill(pid, 0)
+        except OSError as err:
+            if err.errno == errno.ESRCH:
+                # ESRCH == No such process
+                return False
+            elif err.errno == errno.EPERM:
+                # EPERM clearly means there's a process to deny access to
+                return True
+            else:
+                # According to "man 2 kill" possible error values are
+                # (EINVAL, EPERM, ESRCH)
+                raise
+        else:
+            return True
+    elif platform.system() == "Windows":
+        return psutil.pid_exists(int(pid))
+
+
 def getPidFile():
     if os.path.exists("pid.json"):
         with open("pid.json") as json_data_file:
@@ -87,7 +118,7 @@ def purgePidFile():
     pidFile = getPidFile()
     pidOut = {}
     for pidObj in pidFile:
-        if psutil.pid_exists(int(pidObj)):
+        if processRunning(int(pidObj)):
             pidOut[pidObj] = pidFile[pidObj]
 
     with open("pid.json", "w") as pidFileOut:
@@ -168,13 +199,6 @@ if (hasattr(m3u8_master, "playlists") and len(m3u8_master["playlists"]) > 0):
 
                 print("Elapsed time for this m3u8: " +
                       str(int(elapsedTime)) + "s sleeping for: " + str(int(sleepTime))+"s" + " Media Sequence: " + str(currentMediaSequence))
-                # Segments: 0, Playlists: 0
-                # 3448
-                # Elapsed time for this m3u8: 0s sleeping for: 0s Media Sequence: 3448
-                # Traceback (most recent call last):
-                #   File "main.py", line 134, in <module>
-                #     time.sleep(sleepTime)
-                # ValueError: sleep length must be non-negative
                 time.sleep(sleepTime)
 else:
     print("Did not find a video stream")

@@ -3,7 +3,11 @@ import m3u8
 import time
 import os
 import json
-import psutil
+import platform
+import errno
+
+if platform.system() == "Windows":
+    import psutil
 subjects = ["ing101", "mas134", "ma178", "fys129", "ar"]
 url_origin = "https://live.uia.no/live/"
 url_playlist = "/playlist.m3u8?DVR"
@@ -45,6 +49,35 @@ def get_m3u8(uri, subject):
     return m.data
 
 
+def processRunning(pid):
+    if(platform.system() == "Linux"):
+        if pid < 0:
+            return False
+        if pid == 0:
+            # According to "man 2 kill" PID 0 refers to every process
+            # in the process group of the calling process.
+            # On certain systems 0 is a valid PID but we have no way
+            # to know that in a portable fashion.
+            raise ValueError('invalid PID 0')
+        try:
+            os.kill(pid, 0)
+        except OSError as err:
+            if err.errno == errno.ESRCH:
+                # ESRCH == No such process
+                return False
+            elif err.errno == errno.EPERM:
+                # EPERM clearly means there's a process to deny access to
+                return True
+            else:
+                # According to "man 2 kill" possible error values are
+                # (EINVAL, EPERM, ESRCH)
+                raise
+        else:
+            return True
+    elif platform.system() == "Windows":
+        return psutil.pid_exists(int(pid))
+
+
 def getPidFile():
     if os.path.exists("pid.json"):
         with open("pid.json") as json_data_file:
@@ -57,7 +90,7 @@ def purgePidFile():
     pidFile = getPidFile()
     pidOut = {}
     for pidObj in pidFile:
-        if psutil.pid_exists(int(pidObj)):
+        if processRunning(int(pidObj)):
             pidOut[pidObj] = pidFile[pidObj]
 
     with open("pid.json", "w") as pidFileOut:
