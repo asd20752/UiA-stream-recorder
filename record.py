@@ -10,6 +10,10 @@ import errno
 if(platform.system() == "Windows"):
     import psutil
 
+if(len(sys.argv) <= 1):
+    print(
+        "No subject defined, add the wanted subject to record. Example: python main.py [subject]")
+    exit()
 emne = sys.argv[1]
 print(emne)
 url_origin = "https://live.uia.no/live/"
