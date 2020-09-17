@@ -12,7 +12,7 @@ if(platform.system() == "Windows"):
 
 if(len(sys.argv) <= 1):
     print(
-        "No subject defined, add the wanted subject to record. Example: python main.py [subject]")
+        "No subject defined, add the wanted subject to record. Example: python record.py [subject]")
     exit()
 emne = sys.argv[1]
 print(emne)
@@ -174,7 +174,7 @@ if (hasattr(m3u8_master, "playlists") and len(m3u8_master["playlists"]) > 0):
                         # TODO Errorhandeling if internet is lost
                         try:
                             r = requests.get(
-                                url_origin + url_identifier + element["uri"])
+                                url_origin + url_identifier + element["uri"], timeout=5)
                             err = False
                         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.ChunkedEncodingError):
                             print(
