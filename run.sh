@@ -1,1 +1,1 @@
-python3 record.py ma178 &
+python3 record.py $1 &

@@ -117,6 +117,8 @@ def setPidFile():
         with open("pid.json", "w") as outputfile:
             json.dump(jsonPidFile, outputfile)
 
+# TODO delete PID when exiting program.
+
 
 def purgePidFile():
     pidFile = getPidFile()
@@ -133,12 +135,10 @@ purgePidFile()
 checkOutputFolder(outputFolder+emne)
 currentMediaSequence = 0
 active_Stream = True
-# TODO Errorhandeling if internet is lost
-# r = requests.get(url_total)
-# m3u8_master = m3u8.loads(r.text)
 m3u8_master = get_m3u8(url_playlist)
 setPidFile()
-if (len(m3u8_master["playlists"]) > 0):
+# FIXME Has attr tends to break this part of the script, but not having it gives error at other times
+if (hasattr(m3u8_master, "playlists") and len(m3u8_master["playlists"]) > 0):
     p_uri = m3u8_master["playlists"][0]["uri"]
     lastValue = 0
     with open(outputFolder+emne+"/"+fileName+".ts", "wb") as f:
@@ -146,6 +146,7 @@ if (len(m3u8_master["playlists"]) > 0):
             seg = get_m3u8(p_uri)
             if not seg:
                 print("The stream seems to be terminated")
+                exit()
                 active_Stream = False
                 break
 
@@ -161,7 +162,6 @@ if (len(m3u8_master["playlists"]) > 0):
 
                 i = 0
                 print(startIndex)
-                # for element, index in seg["segments"]:
                 fatal_errors = 0
                 errors = 0
                 err = False
@@ -171,7 +171,6 @@ if (len(m3u8_master["playlists"]) > 0):
                     i += 1
                     if (i > startIndex):
                         print(element["uri"])
-                        # TODO Errorhandeling if internet is lost
                         try:
                             r = requests.get(
                                 url_origin + url_identifier + element["uri"], timeout=5)
