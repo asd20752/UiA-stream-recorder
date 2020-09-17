@@ -5,10 +5,11 @@ import os
 import json
 import platform
 import errno
+import subprocess
 
 if platform.system() == "Windows":
     import psutil
-subjects = ["ing101", "mas134", "ma178", "fys129", "ar"]
+subjects = ["ing101", "mas134", "ma178", "ma209", "no008", "fys129", "ar"]
 url_origin = "https://live.uia.no/live/"
 url_playlist = "/playlist.m3u8?DVR"
 
@@ -100,7 +101,7 @@ def purgePidFile():
 def isRecording(subject):
     pidFile = getPidFile()
     for pid in pidFile:
-        if (pidFile[pid] == subject):
+        if (pidFile[pid]["subject"] == subject):
             return True
 
         else:
@@ -116,8 +117,11 @@ for subject in subjects:
         if(isRecording(subject)):
             print(subject + " is already beeing recorded")
         else:
-            print("Starting recording in %s", subject)
-            os.system("python main.py " + subject)
+            print("Starting recording in " + subject)
+            if(platform.system() == "Windows"):
+                subprocess.Popen("run.bat " + subject)
+            else:
+                subprocess.Popen("run.sh " + subject)
 
     else:
         print(subject + " is offline")

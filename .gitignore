@@ -7,3 +7,5 @@
 /config.json
 /test.py
 pid.json
+/log.log
+/pid.json
