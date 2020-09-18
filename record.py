@@ -137,8 +137,8 @@ currentMediaSequence = 0
 active_Stream = True
 m3u8_master = get_m3u8(url_playlist)
 setPidFile()
-# FIXME Has attr tends to break this part of the script, but not having it gives error at other times
-if (hasattr(m3u8_master, "playlists") and len(m3u8_master["playlists"]) > 0):
+
+if (not m3u8_master is None and len(m3u8_master["playlists"]) > 0):
     p_uri = m3u8_master["playlists"][0]["uri"]
     lastValue = 0
     with open(outputFolder+emne+"/"+fileName+".ts", "wb") as f:

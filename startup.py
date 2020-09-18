@@ -2,6 +2,7 @@ import requests
 import m3u8
 import time
 import os
+import sys
 import json
 import platform
 import errno
@@ -9,7 +10,8 @@ import subprocess
 
 if platform.system() == "Windows":
     import psutil
-subjects = ["ing101", "mas134", "ma178", "ma209", "no008", "fys129", "ar"]
+subjects = ["ing101", "mas134", "ma178", "ma209",
+            "dat101", "dat233", "no008", "fys129", "ar"]
 url_origin = "https://live.uia.no/live/"
 url_playlist = "/playlist.m3u8?DVR"
 
@@ -109,19 +111,20 @@ def isRecording(subject):
 
 
 purgePidFile()
-
+path = sys.path[0]
 for subject in subjects:
     playlist = get_m3u8(url_playlist, subject)
     if playlist:
         print(subject + " is online")
         if(isRecording(subject)):
             print(subject + " is already beeing recorded")
+
         else:
             print("Starting recording in " + subject)
             if(platform.system() == "Windows"):
-                subprocess.Popen("run.bat " + subject)
+                subprocess.Popen(path + "/run.bat " + subject)
             else:
-                subprocess.Popen("run.sh " + subject)
+                subprocess.Popen(path + "/run.sh " + subject)
 
     else:
         print(subject + " is offline")
