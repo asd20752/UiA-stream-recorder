@@ -1,1 +1,0 @@
-python record.py %1 &

@@ -68,3 +68,12 @@ class ProcessHandeler:
 
         with open("pid.json", "w") as pidFileOut:
             json.dump(pidOut, pidFileOut)
+
+    def isRecording(self, subject):
+        pidFile = self.getPidFile()
+        for pid in pidFile:
+            if (pidFile[pid]["subject"] == subject):
+                return True
+
+            else:
+                return False

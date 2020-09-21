@@ -14,7 +14,7 @@ if(platform.system() == "Windows"):
 
 class m3u8_receiver:
 
-    def get_m3u8(self, url):
+    def get_m3u8(self, url, shouldPrint=True):
         # TODO Errorhandeling if internet is lost
         er = False
         suc = False
@@ -33,8 +33,9 @@ class m3u8_receiver:
             if(er == False):
                 m = m3u8.loads(req.text)
                 suc = True
-                print("Segments: " + str(len(m.data["segments"])) +
-                      ", Playlists: " + str(len(m.data["playlists"])))
+                if(shouldPrint):
+                    print("Segments: " + str(len(m.data["segments"])) +
+                          ", Playlists: " + str(len(m.data["playlists"])))
 
             else:
                 total_er += 1
@@ -61,7 +62,6 @@ class Record:
         self.outputFolder = "files/output/"
         self.fileName = datetime.now().strftime("%Y_%m_%d_%H_%M_") + self.emne
         self.currentMediaSequence = 0
-
 
     def init(self):
         handeler = ProcessHandeler()
@@ -147,14 +147,15 @@ class Record:
                                     lastValue = lastValue + 1
                                     self.currentMediaSequence += 1
                                     errors = 0
+
                                 else:
                                     if(errors < 10):
                                         i -= 1 if i > 0 else 0
                                         time.sleep(2)
                                     else:
                                         fatal_errors += 1
-                            #To try to prevent getting caught by the anti bot detection
-                            time.sleep(0.5)
+                                # To try to prevent getting caught by the anti bot detection
+                                time.sleep(1)
                         elapsedTime = time.time() - startTime
                         sleepTime = (timing - elapsedTime) / 2
 
