@@ -35,4 +35,5 @@ The script can be set up as a cronjob to check for new video streams. startup.py
 When the stream is finnished it might be a good idea to transcode the recorded file to another more versitile format like mp4. This is a job easily done with FFMPEG. 
     
 # 4. Manual recording
+Is currently not working
 To start a recording manualy. Run the command "python record.py [subject code]" 

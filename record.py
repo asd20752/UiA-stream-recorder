@@ -8,13 +8,9 @@ import json
 import platform
 import errno
 from processHandeler import ProcessHandeler
-if(platform.system() == "Windows"):
-    import psutil
-
-
 class m3u8_receiver:
 
-    def get_m3u8(self, url, shouldPrint=True):
+    def get_m3u8(self, url, subject, shouldPrint=True):
         # TODO Errorhandeling if internet is lost
         er = False
         suc = False
@@ -34,7 +30,7 @@ class m3u8_receiver:
                 m = m3u8.loads(req.text)
                 suc = True
                 if(shouldPrint):
-                    print("Segments: " + str(len(m.data["segments"])) +
+                    print(subject + ": Segments: " + str(len(m.data["segments"])) +
                           ", Playlists: " + str(len(m.data["playlists"])))
 
             else:
@@ -85,21 +81,18 @@ class Record:
         self.init()
         # emne = subject
         print("Starting recoring in: " + self.emne)
-        i = 1
-        while i <= 10:
-            time.sleep(2)
-            i += 1
-        # record()
+        self.record()
 
     def record(self):
-        m = m3u8_receiver(self.url_total)
-        m3u8_master = m.get_m3u8(self.url_total)
+        m = m3u8_receiver()
+        m3u8_master = m.get_m3u8(self.url_total, self.emne)
         if (not m3u8_master is None and len(m3u8_master["playlists"]) > 0):
             p_uri = m3u8_master["playlists"][0]["uri"]
             lastValue = 0
             with open(self.outputFolder+self.emne+"/"+self.fileName+".ts", "wb") as f:
                 while (self.active_Stream):
-                    seg = m3u8_receiver().get_m3u8(self.url_origin + self.url_identifier + p_uri)
+                    seg = m3u8_receiver().get_m3u8(
+                        self.url_origin + self.url_identifier + p_uri, self.emne)
                     if not seg:
                         print("The stream seems to be terminated")
                         exit()
@@ -127,10 +120,10 @@ class Record:
                             timing += element["duration"]
                             i += 1
                             if (i > startIndex):
-                                print(element["uri"])
+                                print(self.emne + ": " + element["uri"])
                                 try:
-                                    r = requests.get(
-                                        self.url_origin + self.url_identifier + element["uri"], timeout=(5, 10))
+                                    r =  requests.get(
+                                        self.url_origin + self.url_identifier + element["uri"], timeout=(5, 10)) 
                                     err = False
                                 except (requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.ChunkedEncodingError):
                                     print(
@@ -142,7 +135,7 @@ class Record:
                                     errors += 1
                                     err = True
 
-                                if(err == False):
+                                if(err == False and r.status_code != 404):
                                     f.write(r.content)
                                     lastValue = lastValue + 1
                                     self.currentMediaSequence += 1
@@ -155,13 +148,14 @@ class Record:
                                     else:
                                         fatal_errors += 1
                                 # To try to prevent getting caught by the anti bot detection
-                                time.sleep(1)
+                                #FIXME On small file durations the script can not keep up, eventuelly start multithreading
+                                time.sleep(0.2)
                         elapsedTime = time.time() - startTime
                         sleepTime = (timing - elapsedTime) / 2
 
-                        print("Elapsed time for this m3u8: " +
+                        print(self.emne + ": Elapsed time for this m3u8: " +
                               str(int(elapsedTime)) + "s sleeping for: " + str(int(sleepTime))+"s" + " Media Sequence: " + str(self.currentMediaSequence))
-                        sleepTime = sleepTime if sleepTime >= 0 else 3
+                        sleepTime = sleepTime if sleepTime >= 0 else 1
                         time.sleep(sleepTime)
         else:
             print("Did not find a video stream")

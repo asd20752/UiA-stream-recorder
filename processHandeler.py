@@ -1,10 +1,11 @@
 import platform
 import errno
 import os
-import psutil
 import json
+import platform
 from time import time
-
+if(platform.system() == "Windows"):
+    import psutil
 
 class ProcessHandeler:
     def __init__(self):

@@ -12,3 +12,4 @@ pid.json
 test.bat
 /__pycache__
 /.VSCodeCounter
+/cronlog.log
