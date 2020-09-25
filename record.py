@@ -8,6 +8,8 @@ import json
 import platform
 import errno
 from processHandeler import ProcessHandeler
+
+
 class m3u8_receiver:
 
     def get_m3u8(self, url, subject, shouldPrint=True):
@@ -95,7 +97,6 @@ class Record:
                         self.url_origin + self.url_identifier + p_uri, self.emne)
                     if not seg:
                         print("The stream seems to be terminated")
-                        exit()
                         self.active_Stream = False
                         break
 
@@ -122,8 +123,8 @@ class Record:
                             if (i > startIndex):
                                 print(self.emne + ": " + element["uri"])
                                 try:
-                                    r =  requests.get(
-                                        self.url_origin + self.url_identifier + element["uri"], timeout=(5, 10)) 
+                                    r = requests.get(
+                                        self.url_origin + self.url_identifier + element["uri"], timeout=(5, 10))
                                     err = False
                                 except (requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.ChunkedEncodingError):
                                     print(
@@ -135,20 +136,24 @@ class Record:
                                     errors += 1
                                     err = True
 
-                                if(err == False and r.status_code != 404):
+                                if(err == False and r.status_code == 200):
                                     f.write(r.content)
                                     lastValue = lastValue + 1
                                     self.currentMediaSequence += 1
                                     errors = 0
-
+                                elif r.status_code == 404:
+                                    print(
+                                        self.emne + ": The requested media ("+element["uri"]+") not avalible on the server")
+                                    errors += 1
                                 else:
                                     if(errors < 10):
                                         i -= 1 if i > 0 else 0
                                         time.sleep(2)
+
                                     else:
                                         fatal_errors += 1
                                 # To try to prevent getting caught by the anti bot detection
-                                #FIXME On small file durations the script can not keep up, eventuelly start multithreading
+                                # FIXME On small file durations the script can not keep up, eventuelly start multithreading
                                 time.sleep(0.2)
                         elapsedTime = time.time() - startTime
                         sleepTime = (timing - elapsedTime) / 2
@@ -159,4 +164,3 @@ class Record:
                         time.sleep(sleepTime)
         else:
             print("Did not find a video stream")
-            exit()
